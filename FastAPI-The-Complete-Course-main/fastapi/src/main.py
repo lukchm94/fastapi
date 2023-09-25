@@ -57,7 +57,23 @@ async def get_book_by_title(title: str):
 
 
 @app.post("/books/create_book")
-async def create_book(new_book=Body()):
+async def create_book(new_book=Body()) -> None:
     # new_book = Body()
-    print(new_book)
+    # print(new_book)
     BOOKS.append(new_book)
+
+
+@app.put("/books/update_book")
+async def update_book(updated_book=Body()) -> None:
+    print(updated_book)
+    for book in range(len(BOOKS)):
+        if BOOKS[book].get("title").casefold() == updated_book.get("title").casefold():
+            BOOKS[book] = updated_book
+
+
+@app.delete("/books/delete_book/{book_title}")
+async def delete_book(book_title: str):
+    for book in range(len(BOOKS)):
+        if BOOKS[book].get("title").casefold() == book_title.casefold():
+            BOOKS.pop(book)
+            break
