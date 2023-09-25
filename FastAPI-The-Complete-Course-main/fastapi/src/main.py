@@ -13,6 +13,11 @@ BOOKS = [
 ]
 
 
+class MissingError(Exception):
+    def __init__(self, key: str) -> None:
+        super().__init__(f"During the call for {key} nothing was returned")
+
+
 @app.get("/books")
 async def first_api():
     return {"message": BOOKS}
@@ -39,6 +44,21 @@ async def read_all_books(dynamic_param: str):
             return {"message": book}
         else:
             return {"message": "book not found"}
+
+
+@app.get("/books/by_author/{author}")
+async def get_book_by_author(author: str) -> None:
+    books_to_returned: list[dict] = []
+    for book in BOOKS:
+        if book.get("author").casefold().lower() == author.casefold().lower():
+            print(book)
+            books_to_returned.append(book)
+
+    if len(books_to_returned) > 0:
+        return {"message": books_to_returned}
+    else:
+        # return {"message": "book not found"}
+        raise MissingError(key=author)
 
 
 @app.get("/book/{title}")
