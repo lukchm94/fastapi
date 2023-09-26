@@ -1,3 +1,6 @@
+from pydantic import BaseModel
+
+
 class Book:
     def __init__(
         self, id: int, title: str, author: str, category: str, rating: int
@@ -7,6 +10,14 @@ class Book:
         self.author = author
         self.category = category
         self.rating = rating
+
+
+class BookRequest(BaseModel):
+    id: int
+    title: str
+    author: str
+    category: str
+    rating: int
 
 
 BOOKS = [
