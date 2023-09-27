@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class Book:
@@ -13,11 +15,29 @@ class Book:
 
 
 class BookRequest(BaseModel):
-    id: int
-    title: str
-    author: str
-    category: str
-    rating: int
+    id: Optional[int] = Field(id="id created automatically on server")
+    title: str = Field(min_length=3)
+    author: str = Field(min_length=1)
+    category: str = Field(min_length=1, max_length=100)
+    rating: int = Field(gt=0, lt=11)
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "title": "New Book",
+                "Author": "Author",
+                "category": "Category of a book",
+                "rating": 5,
+            }
+        }
+
+
+def get_new_id(books: list[Book]) -> int:
+    id: int = 0
+    for book in books:
+        if book.id > id:
+            id = book.id
+    return id + 1
 
 
 BOOKS = [

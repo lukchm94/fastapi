@@ -1,0 +1,3 @@
+# Ignore commits to __pycache__
+**/__pycache__/
+__pycache__/

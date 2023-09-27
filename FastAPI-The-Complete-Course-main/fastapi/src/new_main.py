@@ -1,4 +1,4 @@
-from models.books import BOOKS, Book, BookRequest
+from models.books import BOOKS, Book, BookRequest, get_new_id
 
 from fastapi import FastAPI
 
@@ -12,7 +12,6 @@ async def first_api():
 
 @app.post("/create_book/")
 async def create_book(book_request: BookRequest):
-    print(type(book_request))
+    book_request.id = get_new_id(books=BOOKS)
     new_book: Book = Book(**book_request.dict())
-    print(type(new_book))
     BOOKS.append(new_book)
