@@ -34,5 +34,6 @@
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
         "source.organizeImports": true
-    }
+    },
+    "jupyter.interactiveWindow.textEditor.executeSelection": true
 }
