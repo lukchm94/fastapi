@@ -35,5 +35,7 @@
     "editor.codeActionsOnSave": {
         "source.organizeImports": true
     },
-    "jupyter.interactiveWindow.textEditor.executeSelection": true
+    "jupyter.interactiveWindow.textEditor.executeSelection": true,
+    "python.analysis.indexing": true,
+    "python.analysis.autoImportCompletions": true
 }
