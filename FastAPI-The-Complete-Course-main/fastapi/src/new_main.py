@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from exceptions import RatingError, YearError
+from exceptions import MissingBookError, RatingError, YearError
 from models.books import BOOKS, Book, BookRequest, get_new_id
 
 from fastapi import FastAPI, Path, Query
@@ -18,7 +18,7 @@ async def get_book_by_id(book_id: int = Path(gt=0, lt=1000000)):
     for book in BOOKS:
         if book.id == book_id:
             return {"message": book}
-    return {"message": f"No book found for ID: {book_id}"}
+    raise MissingBookError(book_id=book_id)
 
 
 @app.get("/books/published_after/{year}")
@@ -89,14 +89,22 @@ async def create_book(book_request: BookRequest):
 
 @app.put("/books/update_book")
 async def update_book(book: BookRequest):
+    book_changed: bool = False
     for i in range(len(BOOKS)):
         if BOOKS[i].id == book.id:
             BOOKS[i] = book
+            book_changed = True
+    if not book_changed:
+        raise MissingBookError(book_id=book.id)
 
 
 @app.delete("/books/{book_id}")
 async def delete_book(book_id: int = Path(gt=0, lt=1000000)):
+    book_changed: bool = False
     for i in range(len(BOOKS)):
         if BOOKS[i].id == book_id:
             BOOKS.pop(i)
+            book_changed = True
             break
+    if not book_changed:
+        raise MissingBookError(book_id=book_id)
