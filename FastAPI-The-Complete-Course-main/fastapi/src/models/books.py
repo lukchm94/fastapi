@@ -34,7 +34,7 @@ class BookRequest(BaseModel):
         schema_extra = {
             "example": {
                 "title": "New Book",
-                "Author": "Author",
+                "author": "Author",
                 "category": "Category of a book",
                 "rating": 5,
                 "year_published": 2023,
