@@ -1,3 +1,4 @@
+# source fastapienv/bin/activate
 from typing import Annotated
 
 from database import SessionLocal, engine
