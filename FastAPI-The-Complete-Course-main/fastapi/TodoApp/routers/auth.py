@@ -1,6 +1,8 @@
 from typing import Annotated
 
 from database import SessionLocal
+from exceptions import FailedAuthenticationException, MissingUserException
+from fastapi.security import OAuth2PasswordRequestForm
 from model import Users
 from models.users import UserRequest
 from passlib.context import CryptContext
@@ -44,3 +46,23 @@ async def create_user(db: DB_DEPENDENCY, user_request: UserRequest):
 
     db.add(create_user_model)
     db.commit()
+
+
+@router.post("/token", status_code=status.HTTP_200_OK)
+async def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: DB_DEPENDENCY
+):
+    user = _authenticate_user(
+        db=db, username=form_data.username, password=form_data.password
+    )
+    if user is not None:
+        return {"user": user}
+
+
+def _authenticate_user(db: DB_DEPENDENCY, username: str, password: str):
+    user = db.query(Users).filter(Users.username == username).first()
+    if user is None:
+        raise MissingUserException(username=username)
+    if not bcrypt_context.verify(password, user.hashed_password):
+        raise FailedAuthenticationException()
+    return user
