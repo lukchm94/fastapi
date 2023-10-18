@@ -4,6 +4,7 @@ from database import SessionLocal
 from exceptions import FailedAuthenticationException, NoDataException
 from model import Todos
 from models.todos import TodoRequest
+from sqlalchemy import Null, null
 from sqlalchemy.orm import Session
 
 from fastapi import APIRouter, Depends, Path, status
@@ -26,15 +27,39 @@ USER_DEPENDENCY = Annotated[dict, Depends(get_current_user)]
 
 
 @router.get("/get_all", status_code=status.HTTP_200_OK)
-async def read_all(db: DB_DEPENDENCY, user: USER_DEPENDENCY):
-    return db.query(Todos).filter(Todos.owner_id == user.get("user_id")).all()
+async def read_all_by_user(db: DB_DEPENDENCY, user: USER_DEPENDENCY):
+    if user is None:
+        raise FailedAuthenticationException()
+    res = db.query(Todos).filter(Todos.owner_id == user.get("user_id")).all()
+    return {"elements": len(res), "data": res}
+
+
+@router.get("/get_all_todos", status_code=status.HTTP_200_OK)
+async def read_all(db: DB_DEPENDENCY):
+    res = db.query(Todos).all()
+    for result in res:
+        print(result.owner_id)
+        print(type(result.owner_id))
+    print([result for result in res if result.owner_id is None])
+    return {"elements": len(res), "data": res}
 
 
 @router.get("/{todo_id}", status_code=status.HTTP_200_OK)
-async def read_todo_by_id(db: DB_DEPENDENCY, todo_id: int = Path(gt=0)):
-    todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
+async def read_todo_by_id(
+    db: DB_DEPENDENCY, user: USER_DEPENDENCY, todo_id: int = Path(gt=0)
+):
+    if user is None:
+        raise FailedAuthenticationException()
+
+    todo_model = (
+        db.query(Todos)
+        .filter(Todos.id == todo_id)
+        .filter(Todos.owner_id == user.get("user_id"))
+        .first()
+    )
     if todo_model is not None:
         return {"data": todo_model}
+
     raise NoDataException(todo_id=todo_id)
 
 
@@ -51,9 +76,20 @@ async def create_todo(
 
 @router.put("/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def update_todo(
-    db: DB_DEPENDENCY, todo_request: TodoRequest, todo_id: int = Path(gt=0)
+    db: DB_DEPENDENCY,
+    user: USER_DEPENDENCY,
+    todo_request: TodoRequest,
+    todo_id: int = Path(gt=0),
 ):
-    todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
+    if user is None:
+        raise FailedAuthenticationException()
+
+    todo_model = (
+        db.query(Todos)
+        .filter(Todos.id == todo_id)
+        .filter(Todos.owner_id == user.get("user_id"))
+        .first()
+    )
     if todo_model is None:
         raise NoDataException(todo_id=todo_id)
 
@@ -67,10 +103,36 @@ async def update_todo(
 
 
 @router.delete("/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_todo(db: DB_DEPENDENCY, todo_id: int = Path(gt=0)):
-    todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
+async def delete_todo(
+    db: DB_DEPENDENCY, user: USER_DEPENDENCY, todo_id: int = Path(gt=0)
+):
+    if user is None:
+        raise FailedAuthenticationException()
+
+    todo_model = (
+        db.query(Todos)
+        .filter(Todos.id == todo_id)
+        .filter(Todos.owner_id == user.get("user_id"))
+        .first()
+    )
     if todo_model is None:
         raise NoDataException(todo_id=todo_id)
 
-    db.query(Todos).filter(Todos.id == todo_id).delete()
+    db.query(Todos).filter(Todos.id == todo_id).filter(
+        Todos.owner_id == user.get("user_id")
+    ).delete()
+    db.commit()
+
+
+@router.delete("/missing_owners", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_todos_with_missing_owners(db: DB_DEPENDENCY, user: USER_DEPENDENCY):
+    if user is None:
+        raise FailedAuthenticationException()
+
+    todo_model = db.query(Todos).filter(Todos.owner_id != user.get("user_id")).all()
+    print(todo_model)
+    if todo_model is None:
+        raise NoDataException(todo_id=None)
+
+    db.query(Todos).filter(Todos.owner_id != user.get("user_id")).delete()
     db.commit()
