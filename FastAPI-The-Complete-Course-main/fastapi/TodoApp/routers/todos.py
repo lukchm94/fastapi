@@ -34,16 +34,6 @@ async def read_all_by_user(db: DB_DEPENDENCY, user: USER_DEPENDENCY):
     return {"elements": len(res), "data": res}
 
 
-@router.get("/get_all_todos", status_code=status.HTTP_200_OK)
-async def read_all(db: DB_DEPENDENCY):
-    res = db.query(Todos).all()
-    for result in res:
-        print(result.owner_id)
-        print(type(result.owner_id))
-    print([result for result in res if result.owner_id is None])
-    return {"elements": len(res), "data": res}
-
-
 @router.get("/{todo_id}", status_code=status.HTTP_200_OK)
 async def read_todo_by_id(
     db: DB_DEPENDENCY, user: USER_DEPENDENCY, todo_id: int = Path(gt=0)

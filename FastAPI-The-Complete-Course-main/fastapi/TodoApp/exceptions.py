@@ -33,3 +33,13 @@ class FailedAuthenticationException(HTTPException):
         headers: Dict[str, Any] | None = None,
     ) -> None:
         super().__init__(status_code, detail, headers)
+
+
+class PasswordUpdateException(HTTPException):
+    def __init__(
+        self,
+        status_code: Optional[int] = 422,
+        detail: Optional[str] = "New and old passwords are the same",
+        headers: Dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(status_code, detail, headers)
